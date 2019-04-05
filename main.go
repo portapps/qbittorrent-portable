@@ -6,23 +6,28 @@ import (
 	"os"
 
 	. "github.com/portapps/portapps"
+	"github.com/portapps/portapps/pkg/utl"
+)
+
+var (
+	app *App
 )
 
 func init() {
-	Papp.ID = "qbittorrent-portable"
-	Papp.Name = "qBittorrent"
-	Init()
+	var err error
+
+	// Init app
+	if app, err = New("qbittorrent-portable", "qBittorrent"); err != nil {
+		Log.Fatal().Err(err).Msg("Cannot initialize application. See log file for more info.")
+	}
 }
 
 func main() {
-	Papp.AppPath = AppPathJoin("app")
-	Papp.DataPath = CreateFolder(AppPathJoin("data"))
-	Papp.Process = PathJoin(Papp.AppPath, "qbittorrent.exe")
-	Papp.Args = nil
-	Papp.WorkingDir = Papp.AppPath
+	utl.CreateFolder(app.DataPath)
+	app.Process = utl.PathJoin(app.AppPath, "qbittorrent.exe")
 
-	profilePath := CreateFolder(PathJoin(Papp.DataPath, "profile"))
-	OverrideEnv("QBT_PROFILE", profilePath)
+	profilePath := utl.CreateFolder(app.DataPath, "profile")
+	utl.OverrideEnv("QBT_PROFILE", profilePath)
 
-	Launch(os.Args[1:])
+	app.Launch(os.Args[1:])
 }
