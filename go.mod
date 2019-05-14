@@ -2,4 +2,4 @@ module github.com/portapps/qbittorrent-portable
 
 go 1.12
 
-require github.com/portapps/portapps v1.22.2
+require github.com/portapps/portapps v1.23.0
