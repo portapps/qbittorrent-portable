@@ -12,13 +12,15 @@
 
 ## Notice of Non-Affiliation and Disclaimer
 
-Portapps is not affiliated, associated, authorized, endorsed by, or in any way officially connected with qBittorrent, or any of its subsidiaries or its affiliates. The official qBittorrent website can be found at https://www.qbittorrent.org/.
+Portapps is not affiliated, associated, authorized, endorsed by, or in any way officially connected with qBittorrent™, or any of its subsidiaries or its affiliates.
 
-The name qBittorrent® as well as related names, marks, emblems and images are registered trademarks of their respective owners.
+The official qBittorrent™ website can be found at https://www.qbittorrent.org/.
+
+The name qBittorrent™ as well as related names, marks, emblems and images are registered trademarks of their respective owners.
 
 ## About
 
-qBittorrent portable app made with 🚀 [Portapps](https://portapps.io).<br />
+qBittorrent™ portable app made with 🚀 [Portapps](https://portapps.io).<br />
 Documentation and downloads can be found on https://portapps.io/app/qbittorrent-portable/
 
 ## How can I help ?
