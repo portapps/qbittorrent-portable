@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.9-7 (2019/10/29)
+
+* qBittorrent 4.1.9
+* Portapps 1.28.0
+
 ## 4.1.8-6 (2019/09/30)
 
 * qBittorrent 4.1.8
