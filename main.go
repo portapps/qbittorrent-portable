@@ -30,5 +30,6 @@ func main() {
 	profilePath := utl.CreateFolder(app.DataPath, "profile")
 	utl.OverrideEnv("QBT_PROFILE", profilePath)
 
+	defer app.Close()
 	app.Launch(os.Args[1:])
 }
