@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.3.0.1-14 (2020/10/27)
+
+* qBittorrent 4.3.0.1
+* Portapps 2.6.0
+
 ## 4.2.5-13 (2020/05/03)
 
 * qBittorrent 4.2.5
