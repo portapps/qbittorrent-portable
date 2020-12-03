@@ -5,9 +5,9 @@ package main
 import (
 	"os"
 
-	"github.com/portapps/portapps/v2"
-	"github.com/portapps/portapps/v2/pkg/log"
-	"github.com/portapps/portapps/v2/pkg/utl"
+	"github.com/portapps/portapps/v3"
+	"github.com/portapps/portapps/v3/pkg/log"
+	"github.com/portapps/portapps/v3/pkg/utl"
 )
 
 var (
@@ -28,7 +28,7 @@ func main() {
 	app.Process = utl.PathJoin(app.AppPath, "qbittorrent.exe")
 
 	profilePath := utl.CreateFolder(app.DataPath, "profile")
-	utl.OverrideEnv("QBT_PROFILE", profilePath)
+	os.Setenv("QBT_PROFILE", profilePath)
 
 	defer app.Close()
 	app.Launch(os.Args[1:])
