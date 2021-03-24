@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.3.3-16 (2021/03/24)
+
+* qBittorrent 4.3.3
+* Portapps 3.3.0
+* No more win32 release
+
 ## 4.3.2-15 (2021/01/10)
 
 * qBittorrent 4.3.2
