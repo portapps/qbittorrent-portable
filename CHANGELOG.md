@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.3.5-18 (2021/11/21)
+
+* qBittorrent 4.3.8
+* Portapps 3.4.0
+
 ## 4.3.5-17 (2021/05/22)
 
 * qBittorrent 4.3.5
