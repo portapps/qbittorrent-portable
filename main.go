@@ -1,9 +1,9 @@
 //go:generate go install -v github.com/josephspurrier/goversioninfo/cmd/goversioninfo
-//go:generate goversioninfo -icon=res/papp.ico -manifest=res/papp.manifest
 package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/portapps/portapps/v3"
 	"github.com/portapps/portapps/v3/pkg/log"
@@ -25,7 +25,7 @@ func init() {
 
 func main() {
 	utl.CreateFolder(app.DataPath)
-	app.Process = utl.PathJoin(app.AppPath, "qbittorrent.exe")
+	app.Process = filepath.Join(app.AppPath, "qbittorrent.exe")
 
 	profilePath := utl.CreateFolder(app.DataPath, "profile")
 	os.Setenv("QBT_PROFILE", profilePath)
