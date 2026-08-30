@@ -7,7 +7,6 @@ import (
 
 	"github.com/portapps/portapps/v3"
 	"github.com/portapps/portapps/v3/pkg/log"
-	"github.com/portapps/portapps/v3/pkg/utl"
 )
 
 var (
@@ -24,10 +23,15 @@ func init() {
 }
 
 func main() {
-	utl.CreateFolder(app.DataPath)
+	if err := os.MkdirAll(app.DataPath, 0o755); err != nil {
+		log.Fatal().Err(err).Msg("Cannot create data path")
+	}
 	app.Process = filepath.Join(app.AppPath, "qbittorrent.exe")
 
-	profilePath := utl.CreateFolder(app.DataPath, "profile")
+	profilePath := filepath.Join(app.DataPath, "profile")
+	if err := os.MkdirAll(profilePath, 0o755); err != nil {
+		log.Fatal().Err(err).Msg("Cannot create profile path")
+	}
 	os.Setenv("QBT_PROFILE", profilePath)
 
 	defer app.Close()
