@@ -1,0 +1,161 @@
+name: update-app
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * *'
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    paths:
+      - '.github/workflows/update-app.yml'
+      - 'build.properties'
+
+jobs:
+  update:
+    if: github.event_name != 'pull_request'
+    runs-on: windows-latest
+    environment: update-app
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      -
+        name: GitHub auth token from GitHub App
+        id: write-app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PORTAPPS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.PORTAPPS_BOT_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          token: ${{ steps.write-app.outputs.token }}
+          fetch-depth: 0
+          persist-credentials: false
+      -
+        name: Update qBittorrent
+        id: update
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: &update-script |
+            const fs = require('fs');
+            const path = require('path');
+
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner: 'qbittorrent',
+              repo: 'qBittorrent',
+              per_page: 100
+            });
+            const candidates = releases.flatMap(release => {
+              const match = /^release-(\d+\.\d+\.\d+)$/.exec(release.tag_name);
+              if (release.draft || release.prerelease || !match) {
+                return [];
+              }
+              const version = match[1];
+              const asset = release.assets.find(asset =>
+                asset.name === `qbittorrent_${version}_x64_setup.exe`);
+              return asset ? [{ version, url: asset.browser_download_url }] : [];
+            });
+            if (candidates.length === 0) {
+              throw new Error('No stable qBittorrent x64 installer found in upstream releases');
+            }
+            const compareVersions = (left, right) => {
+              const a = left.split('.').map(Number);
+              const b = right.split('.').map(Number);
+              for (let i = 0; i < 3; i++) {
+                if (a[i] !== b[i]) return a[i] - b[i];
+              }
+              return 0;
+            };
+            candidates.sort((a, b) => compareVersions(a.version, b.version));
+            const latest = candidates.at(-1);
+
+            const file = path.join(process.env.GITHUB_WORKSPACE, 'build.properties');
+            const content = fs.readFileSync(file, 'utf8');
+            const property = name => {
+              const match = content.match(new RegExp(`^${name.replaceAll('.', '\\.')}\\s*=\\s*(.+)$`, 'm'));
+              if (!match) throw new Error(`Missing ${name} in build.properties`);
+              return match[1].trim();
+            };
+            const currentVersion = property('app.version');
+            const currentRelease = Number(property('app.release'));
+            if (!/^\d+\.\d+\.\d+$/.test(currentVersion) ||
+                !Number.isSafeInteger(currentRelease)) {
+              throw new Error('Invalid app.version or app.release in build.properties');
+            }
+            if (compareVersions(latest.version, currentVersion) < 0) {
+              throw new Error(`Latest available installer ${latest.version} is older than ${currentVersion}`);
+            }
+
+            const replaceProperty = (text, name, value) =>
+              text.replace(new RegExp(`^(${name.replaceAll('.', '\\.')}\\s*=\\s*).+$`, 'm'),
+                (_, prefix) => `${prefix}${value}`);
+            let updated = replaceProperty(content, 'app.version', latest.version);
+            updated = replaceProperty(updated, 'atf.win64.url', latest.url);
+            if (latest.version !== currentVersion) {
+              updated = replaceProperty(updated, 'app.release', currentRelease + 1);
+            }
+            if (updated !== content) {
+              fs.writeFileSync(file, updated, 'utf8');
+              core.info(`Updated build.properties to qBittorrent ${latest.version}`);
+            } else {
+              core.info('build.properties is already up to date');
+            }
+            core.setOutput('title', `qBittorrent ${latest.version}`);
+            core.setOutput('version', latest.version);
+      -
+        name: Create pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          base: ${{ github.event.repository.default_branch }}
+          branch: update-qbittorrent
+          token: ${{ steps.write-app.outputs.token }}
+          commit-message: ${{ steps.update.outputs.title }}
+          title: ${{ steps.update.outputs.title }}
+          signoff: true
+          sign-commits: true
+          delete-branch: true
+          body: |
+            This updates qBittorrent to ${{ steps.update.outputs.version }}.
+
+  diff:
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      -
+        name: Update qBittorrent
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: *update-script
+      -
+        name: Show diff
+        shell: pwsh
+        run: |
+          $diff = git --no-pager diff -- build.properties
+          if ($diff) {
+            $diff
+          } else {
+            Write-Host "No update diff."
+          }
